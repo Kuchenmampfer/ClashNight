@@ -1,0 +1,81 @@
+import sys
+
+import asyncpg
+import coc
+import discord
+import traceback
+import asyncio
+
+from discord.ext import commands
+from time import sleep
+
+from log_stuff.logger_setup import setup_logger
+from settings import Settings
+
+
+async def get_prefix(b, m):
+    if m.guild.id not in b.prefixes.keys():
+        async with b.pool.acquire() as conn:
+            record = await conn.fetchrow('''
+                                         SELECT bot_prefix from DiscordGuilds
+                                         WHERE guild_id = $1
+                                         ''',
+                                         m.guild.id)
+        b.prefixes[m.guild.id] = record[0]
+    return b.prefixes[m.guild.id]
+
+
+class Bot(commands.Bot):
+    def __init__(self, settings: Settings):
+        super().__init__(command_prefix=get_prefix,
+                         case_insensitive=True,
+                         intents=settings.intents)
+        self.coc = settings.coc_client
+        self.prefixes = settings.prefixes
+        self.emotes = settings.emotes
+        self.war_report_channel_id = settings.war_report_channel_id
+        self.logger = setup_logger('logger', 'log_stuff/my.log', settings.webhook_url, settings.log_level)
+        self.discord_logger = setup_logger('discord', 'log_stuff/discord.log', settings.webhook_url, settings.log_level)
+        self.coc_logger = setup_logger('coc.http', 'log_stuff/coc.log', settings.webhook_url, settings.log_level)
+        self.postgres_dsn_str = settings.dsn
+        asyncio.get_event_loop().run_until_complete(self.get_pool())
+        sleep(4)
+
+        for extension in settings.cogs:
+            try:
+                self.load_extension(extension)
+            except BaseException as error:
+                exc = ''.join(traceback.format_exception(type(error), error, error.__traceback__, chain=True))
+                self.logger.error(exc)
+
+    async def get_pool(self):
+        self.pool = await asyncpg.create_pool(self.postgres_dsn_str)
+
+    async def on_ready(self):
+        self.logger.warning(f"Bot is logged in as {self.user} ID: {self.user.id}")
+
+    async def on_resume(self):
+        self.logger.warning('Resuming connection...')
+
+    async def on_command(self, ctx):
+        await ctx.trigger_typing()
+        self.logger.debug(f'{ctx.author} hat {ctx.message.content} aufgerufen.')
+
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, coc.errors.Maintenance):
+            await ctx.send('Die API ist gerade in der Wartungspause, probier es später nochmal')
+        elif isinstance(error, commands.errors.CommandNotFound):
+            pass
+        else:
+            exc = f'Command "{ctx.message.content}" caused the following error:\n\n' + \
+                  ''.join(traceback.format_exception(type(error), error, error.__traceback__, chain=True))
+            self.logger.error(exc)
+
+    async def on_application_command_error(
+            self, ctx: discord.ApplicationContext, error: discord.DiscordException
+    ) -> None:
+        if isinstance(error, coc.errors.Maintenance):
+            await ctx.respond('Die API ist gerade in der Wartungspause, probier es später nochmal')
+        else:
+            exc = ''.join(traceback.format_exception(type(error), error, error.__traceback__, chain=True))
+            self.logger.error(exc)
