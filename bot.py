@@ -17,7 +17,8 @@ class Bot(commands.Bot):
     def __init__(self, settings: Settings):
         super().__init__(command_prefix=',',
                          case_insensitive=True,
-                         intents=settings.intents)
+                         intents=settings.intents,
+                         help_command=None)
         self.coc = settings.coc_client
         self.emotes = settings.emotes
         self.war_report_channel_id = settings.war_report_channel_id
