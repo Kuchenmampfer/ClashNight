@@ -19,7 +19,7 @@ class General(commands.Cog):
                       '40669966397&permissions=378880&scope=bot%20applications.commands) to all your servers. If you need help, ' \
                       'have found a bug, want to request a feature or stay up to date with the my development, join my ' \
                       '[support server](https://discord.gg/qtphfZ9XFH). ' \
-                      'If you want to check out my source code, do so on [github](github_link).'
+                      'If you want to check out my source code, do so on [github](https://github.com/Kuchenmampfer/ClashNight).'
         embed = discord.Embed(colour=discord.Colour.blue(), title='General Information about me',
                               description=description)
         async with self.bot.pool.acquire() as conn:
@@ -39,6 +39,8 @@ class General(commands.Cog):
                                                                      'scope=bot%20applications.commands')
             support_button = discord.ui.Button(style=discord.ButtonStyle.link,
                                                label='support server', url='https://discord.gg/qtphfZ9XFH')
+            github_button = discord.ui.Button(style=discord.ButtonStyle.link,
+                                              label='code on github', url='https://github.com/Kuchenmampfer/ClashNight')
             view = discord.ui.View(invite_button, support_button)
             await ctx.respond(embed=embed, view=view)
 
