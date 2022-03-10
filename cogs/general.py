@@ -49,9 +49,9 @@ class General(commands.Cog):
         await ctx.defer()
         embed = discord.Embed(colour=discord.Colour.blue(), title='My Commands')
         for cmd in await self.bot.http.get_global_commands(self.bot.application_id):
-            embed.add_field(name=cmd['name'], value=f'*{cmd["description"]}*', inline=False)
-        for cmd in await self.bot.http.get_guild_commands(self.bot.application_id, ctx.guild_id):
-            embed.add_field(name=cmd['name'], value=f'*{cmd["description"]}*', inline=False)
+            if cmd["description"]:
+                embed.add_field(name=cmd['name'], value=f'*{cmd["description"]}*', inline=False)
+            embed.add_field(name=cmd['name'], value=f'{cmd["description"]}', inline=False)
         await ctx.respond(embed=embed)
 
 
