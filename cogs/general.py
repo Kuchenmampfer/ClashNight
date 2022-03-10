@@ -41,7 +41,7 @@ class General(commands.Cog):
                                                label='support server', url='https://discord.gg/qtphfZ9XFH')
             github_button = discord.ui.Button(style=discord.ButtonStyle.link,
                                               label='code on github', url='https://github.com/Kuchenmampfer/ClashNight')
-            view = discord.ui.View(invite_button, support_button)
+            view = discord.ui.View(invite_button, support_button, github_button)
             await ctx.respond(embed=embed, view=view)
 
     @commands.slash_command(guild_ids=[805155951324692571], name='commands', description='Shows all my commands')
