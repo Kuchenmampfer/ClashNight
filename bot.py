@@ -13,25 +13,12 @@ from log_stuff.logger_setup import setup_logger
 from settings import Settings
 
 
-async def get_prefix(b, m):
-    if m.guild.id not in b.prefixes.keys():
-        async with b.pool.acquire() as conn:
-            record = await conn.fetchrow('''
-                                         SELECT bot_prefix from DiscordGuilds
-                                         WHERE guild_id = $1
-                                         ''',
-                                         m.guild.id)
-        b.prefixes[m.guild.id] = record[0]
-    return b.prefixes[m.guild.id]
-
-
 class Bot(commands.Bot):
     def __init__(self, settings: Settings):
-        super().__init__(command_prefix=get_prefix,
+        super().__init__(command_prefix=',',
                          case_insensitive=True,
                          intents=settings.intents)
         self.coc = settings.coc_client
-        self.prefixes = settings.prefixes
         self.emotes = settings.emotes
         self.war_report_channel_id = settings.war_report_channel_id
         self.logger = setup_logger('logger', 'log_stuff/my.log', settings.webhook_url, settings.log_level)

@@ -25,7 +25,6 @@ class Settings:
                 self.dsn = dev_secrets.postgres_dsn_str
                 self.webhook_url = dev_secrets.logging_webhook_url
                 self.log_level = logging.DEBUG
-                self.prefixes = {805155951324692571: ','}
                 self.war_report_channel_id = dev_secrets.WAR_REPORT_CHANNEL_ID
         else:
             if daemon:
@@ -42,9 +41,9 @@ class Settings:
                 self.dsn = production_secrets.postgres_dsn_str
                 self.webhook_url = production_secrets.logging_webhook_url
                 self.log_level = logging.INFO
-                self.prefixes = {805155951324692571: '!'}
                 self.war_report_channel_id = production_secrets.WAR_REPORT_CHANNEL_ID
-        self.intents = Intents.all()
+        self.intents = Intents.default()
+        self.intents.members = True
         self.cogs = initial_extensions
         self.emotes = emotes
 
