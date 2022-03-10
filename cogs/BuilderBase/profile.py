@@ -26,7 +26,6 @@ class Dropdown(discord.ui.Select):
                 embed = discord.Embed(title=f'Accounts from {self.member.display_name}',
                                       colour=discord.Colour.blue(), )
                 embed.set_thumbnail(url=self.member.display_avatar.url)
-                await add_fun_statistics(conn, self.member.id, embed, self.bot.emotes)
                 await add_accounts_overview(embed, conn, self.member.id)
             else:
                 data = await get_account_data(conn, self.values[0])
@@ -119,18 +118,6 @@ async def add_accounts_overview(embed: discord.Embed, conn: asyncpg.Connection, 
                         inline=False)
 
 
-async def add_fun_statistics(conn: asyncpg.Connection, discord_id: int, embed: discord.Embed, emotes: dict) -> None:
-    [vier_gewinnt_record, music_quiz_record] = await get_fun_data(conn, discord_id)
-    embed.add_field(name='Vier-Gewinnt-Elo', value=emotes[vier_gewinnt_record[0]], inline=False)
-    if music_quiz_record[0]:
-        embed.add_field(name='Musikquiz',
-                        value=f'`{music_quiz_record[0]}`:repeat:`{music_quiz_record[1]}`🌠'
-                              f'`{round(music_quiz_record[2], int(2 - music_quiz_record[2] // 10))}`🚫` '
-                              f'{music_quiz_record[3]}`⛰️\n'
-                              f'------------------------------------',
-                        inline=False)
-
-
 def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
     embed = discord.Embed(title=data["coc_name"], description=data["coc_tag"], colour=discord.Colour.blue())
     if member_avatar_url:
@@ -168,7 +155,6 @@ class Profile(commands.Cog):
                               colour=discord.Colour.blue(), )
         embed.set_thumbnail(url=member.display_avatar.url)
         async with self.bot.pool.acquire() as conn:
-            await add_fun_statistics(conn, member.id, embed, self.bot.emotes)
             await add_accounts_overview(embed, conn, member.id)
         return embed
 
