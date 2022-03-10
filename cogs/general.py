@@ -6,7 +6,7 @@ class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(guild_ids=[805155951324692571], description='Read some general information about me')
+    @commands.slash_command(description='Read some general information about me')
     async def info(self, ctx: discord.ApplicationContext):
         await ctx.defer()
         description = 'This bot has its roots in the beginning of 2021, when my developer took a look into making ' \
@@ -44,7 +44,7 @@ class General(commands.Cog):
             view = discord.ui.View(invite_button, support_button, github_button)
             await ctx.respond(embed=embed, view=view)
 
-    @commands.slash_command(guild_ids=[805155951324692571], name='commands', description='Shows all my commands')
+    @commands.slash_command(name='commands', description='Shows all my commands')
     async def show_commands(self, ctx: discord.ApplicationContext):
         await ctx.defer()
         embed = discord.Embed(colour=discord.Colour.blue(), title='My Commands')
