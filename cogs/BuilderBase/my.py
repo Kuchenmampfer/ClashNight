@@ -1,4 +1,3 @@
-import typing
 from datetime import datetime
 
 import coc
@@ -33,10 +32,10 @@ Y_LABEL_DICT = {
 
 
 class ScrollView(discord.ui.View):
-    def __init__(self, plot: TimePlot, user: typing.Union[discord.User, discord.Member]):
+    def __init__(self, plot: TimePlot, user_id: int):
         super().__init__()
         self.plot = plot
-        self.user = user
+        self.user_id = user_id
         self.message = None
         if len(self.plot.data) > 1:
             select_options = []
@@ -62,58 +61,41 @@ class ScrollView(discord.ui.View):
         self.stop_button.callback = self.satisfied
         self.add_item(self.stop_button)
 
-    async def got_to_previous_time_window(self, interaction: discord.Interaction):
-        if interaction.user == self.user:
-            await interaction.response.defer()
-            self.plot.previous()
-            await self.update_message(interaction)
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id == self.user_id:
+            return True
         else:
-            await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
+            await interaction.response.send_message("Sorry, only the command user can use these buttons", ephemeral=True)
+            return False
+
+    async def got_to_previous_time_window(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        self.plot.previous()
+        await self.update_message(interaction)
 
     async def got_to_next_time_window(self, interaction: discord.Interaction):
-        if interaction.user == self.user:
-            await interaction.response.defer()
-            self.plot.next()
-            await self.update_message(interaction)
-        else:
-            await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
+        await interaction.response.defer()
+        self.plot.next()
+        await self.update_message(interaction)
 
     async def got_to_current_time_window(self, interaction: discord.Interaction):
-        if interaction.user == self.user:
-            await interaction.response.defer()
-            self.plot.now()
-            await self.update_message(interaction)
-        else:
-            await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
+        await interaction.response.defer()
+        self.plot.now()
+        await self.update_message(interaction)
 
     async def satisfied(self, interaction: discord.Interaction):
-        if interaction.user == self.user:
-            await interaction.response.defer()
-            self.stop()
-        else:
-            await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
+        await interaction.response.defer()
+        self.stop()
 
     async def account_chosen(self, interaction: discord.Interaction):
-        if interaction.user == self.user:
-            await interaction.response.defer()
-            self.plot.choose_account(self.account_selector.values[0])
-            await self.update_message(interaction)
-        else:
-            await interaction.response.send_message('Sorry, only the command user can use this menu', ephemeral=True)
+        await interaction.response.defer()
+        self.plot.choose_account(self.account_selector.values[0])
+        await self.update_message(interaction)
 
     async def update_message(self, interaction: discord.Interaction):
-        if self.plot.current_end_time - self.plot.offset < self.plot.first_time:
-            self.previous_button.disabled = True
-        else:
-            self.previous_button.disabled = False
-        if self.plot.current_end_time + self.plot.offset > datetime.now(self.plot.timezone):
-            self.next_button.disabled = True
-        else:
-            self.next_button.disabled = False
-        if self.plot.current_end_time == datetime.now(self.plot.timezone):
-            self.now_button.disabled = True
-        else:
-            self.now_button.disabled = False
+        self.previous_button.disabled = self.plot.current_end_time - self.plot.offset < self.plot.first_time
+        self.next_button.disabled = self.plot.current_end_time + self.plot.offset > datetime.now(self.plot.timezone)
+        self.now_button.disabled = self.plot.current_end_time == datetime.now(self.plot.timezone)
         await interaction.delete_original_message()
         self.message = await interaction.followup.send(file=self.plot.plot(), view=self)
 
@@ -171,7 +153,7 @@ class My(commands.Cog):
                 await ctx.respond('Sorry, I have no data to show you. Please do some attacks to change that.')
                 return
             image = plot.plot()
-        view = ScrollView(plot, ctx.user)
+        view = ScrollView(plot, ctx.user.id)
         view.message = await ctx.respond(file=image, view=view)
         await view.wait()
         await view.message.edit(view=None)
