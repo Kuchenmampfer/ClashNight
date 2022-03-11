@@ -1,3 +1,6 @@
+import typing
+from datetime import datetime
+
 import coc
 import discord.ui
 import matplotlib
@@ -30,9 +33,10 @@ Y_LABEL_DICT = {
 
 
 class ScrollView(discord.ui.View):
-    def __init__(self, plot: TimePlot):
+    def __init__(self, plot: TimePlot, user: typing.Union[discord.User, discord.Member]):
         super().__init__()
         self.plot = plot
+        self.user = user
         self.message = None
         if len(self.plot.data) > 1:
             select_options = []
@@ -45,35 +49,70 @@ class ScrollView(discord.ui.View):
             self.account_selector = discord.ui.Select(options=select_options, row=0)
             self.account_selector.callback = self.account_chosen
             self.add_item(self.account_selector)
+        self.previous_button = discord.ui.Button(label='◀️', style=discord.ButtonStyle.green, row=1)
+        self.previous_button.callback = self.got_to_previous_time_window
+        self.add_item(self.previous_button)
+        self.next_button = discord.ui.Button(label='▶️', style=discord.ButtonStyle.green, row=1, disabled=True)
+        self.next_button.callback = self.got_to_next_time_window
+        self.add_item(self.next_button)
+        self.now_button = discord.ui.Button(label='⏯️', style=discord.ButtonStyle.green, row=1, disabled=True)
+        self.now_button.callback = self.got_to_current_time_window
+        self.add_item(self.now_button)
+        self.stop_button = discord.ui.Button(label='⏹️', style=discord.ButtonStyle.green, row=1)
+        self.stop_button.callback = self.satisfied
+        self.add_item(self.stop_button)
 
-    @discord.ui.button(label='◀️', style=discord.ButtonStyle.green, row=1)
-    async def got_to_previous_time_window(self, _: discord.ui.Button, interaction: discord.Interaction):
+    async def got_to_previous_time_window(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        self.plot.previous()
-        await self.update_message(interaction)
+        if interaction.user == self.user:
+            self.plot.previous()
+            await self.update_message(interaction)
+        else:
+            await interaction.followup.send('Sorry, only the command user can use these buttons', hidden=True)
 
-    @discord.ui.button(label='▶️', style=discord.ButtonStyle.green, row=1)
-    async def got_to_next_time_window(self, _: discord.ui.Button, interaction: discord.Interaction):
+    async def got_to_next_time_window(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        self.plot.next()
-        await self.update_message(interaction)
+        if interaction.user == self.user:
+            self.plot.next()
+            await self.update_message(interaction)
+        else:
+            await interaction.followup.send('Sorry, only the command user can use these buttons', hidden=True)
 
-    @discord.ui.button(label='⏯️', style=discord.ButtonStyle.green, row=1)
-    async def got_to_current_time_window(self, _: discord.ui.Button, interaction: discord.Interaction):
+    async def got_to_current_time_window(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        self.plot.now()
-        await self.update_message(interaction)
+        if interaction.user == self.user:
+            self.plot.now()
+            await self.update_message(interaction)
+        else:
+            await interaction.followup.send('Sorry, only the command user can use these buttons', hidden=True)
 
-    @discord.ui.button(label='⏹️', style=discord.ButtonStyle.green, row=1)
-    async def satisfied(self, _: discord.ui.Button, __: discord.Interaction):
-        self.stop()
+    async def satisfied(self, interaction: discord.Interaction):
+        if interaction.user == self.user:
+            self.stop()
+        else:
+            await interaction.followup.send('Sorry, only the command user can use these buttons', hidden=True)
 
     async def account_chosen(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        self.plot.chosen_account = self.account_selector.values[0]
-        await self.update_message(interaction)
+        if interaction.user == self.user:
+            self.plot.choose_account(self.account_selector.values[0])
+            await self.update_message(interaction)
+        else:
+            await interaction.followup.send('Sorry, only the command user can use this menu', hidden=True)
 
     async def update_message(self, interaction: discord.Interaction):
+        if self.plot.current_end_time - self.plot.offset < self.plot.first_time:
+            self.previous_button.disabled = True
+        else:
+            self.previous_button.disabled = False
+        if self.plot.current_end_time + self.plot.offset > datetime.now(self.plot.timezone):
+            self.next_button.disabled = True
+        else:
+            self.next_button.disabled = False
+        if self.plot.current_end_time == datetime.now(self.plot.timezone):
+            self.now_button.disabled = True
+        else:
+            self.now_button.disabled = False
         await interaction.delete_original_message()
         self.message = await interaction.followup.send(file=self.plot.plot(), view=self)
 
@@ -89,6 +128,7 @@ class My(commands.Cog):
     async def my(self, ctx: discord.ApplicationContext,
                  which_data: Option(str, name='category',
                                     description='Which data shall I plot over time?',
+                                    default='Trophies',
                                     choices=[
                                         OptionChoice('Trophies'),
                                         OptionChoice('Wins'),
@@ -130,7 +170,7 @@ class My(commands.Cog):
                 await ctx.respond('Sorry, I have no data to show you. Please do some attacks to change that.')
                 return
             image = plot.plot()
-        view = ScrollView(plot)
+        view = ScrollView(plot, ctx.user)
         view.message = await ctx.respond(file=image, view=view)
         await view.wait()
         await view.message.edit(view=None)

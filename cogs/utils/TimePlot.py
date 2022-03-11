@@ -25,6 +25,7 @@ class TimePlot:
         self.fig, self.ax = plt.subplots(figsize=(12, 6))
         self.timezone = timezone
         self.current_end_time = datetime.now(self.timezone)
+        self.first_time = datetime.now(self.timezone)
 
     def add_data(self, tag: str, name: str, times: list, data: list):
         if self.event_data:
@@ -40,20 +41,25 @@ class TimePlot:
             times_ext = np.array(times_ext)
             data_ext = np.array(data_ext)
             self.data[tag] = (name, times_ext, data_ext[:-1])
+            self.first_time = min(self.first_time, min(times_ext))
         else:
             times = np.array(times)
             data = np.array(data)
             self.data[tag] = (name, times, data)
+            self.first_time = min(self.first_time, min(times))
 
     def next(self):
-        self.current_end_time = min(self.current_end_time + self.offset, datetime.now(self.timezone))
+        self.current_end_time = self.current_end_time + self.offset
 
     def previous(self):
-        self.current_end_time = max(self.current_end_time - self.offset,
-                                    min([data[0][0] for data in self.data.values()]) + self.offset)
+        self.current_end_time = self.current_end_time - self.offset
 
     def now(self):
         self.current_end_time = datetime.now(self.timezone)
+
+    def choose_account(self, tag: str):
+        self.chosen_account = tag
+        self.first_time = min(self.data[tag][1])
 
     def plot(self) -> discord.File:
         self.ax.clear()
