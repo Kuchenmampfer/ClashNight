@@ -34,16 +34,17 @@ class ScrollView(discord.ui.View):
         super().__init__()
         self.plot = plot
         self.message = None
-        select_options = []
-        names = []
-        for tag, (name, _, _) in self.plot.data.items():
-            select_options.append(SelectOption(label=name, description=tag, value=tag))
-            names.append(name)
-        select_options.insert(0, SelectOption(label='All your accounts', description=', '.join(names),
-                                              value='all accounts'))
-        self.account_selector = discord.ui.Select(options=select_options, row=0)
-        self.account_selector.callback = self.account_chosen
-        self.add_item(self.account_selector)
+        if len(self.plot.data) > 1:
+            select_options = []
+            names = []
+            for tag, (name, _, _) in self.plot.data.items():
+                select_options.append(SelectOption(label=name, description=tag, value=tag))
+                names.append(name)
+            select_options.insert(0, SelectOption(label='All your accounts', description=', '.join(names),
+                                                  value='all accounts'))
+            self.account_selector = discord.ui.Select(options=select_options, row=0)
+            self.account_selector.callback = self.account_chosen
+            self.add_item(self.account_selector)
 
     @discord.ui.button(label='◀️', style=discord.ButtonStyle.green, row=1)
     async def got_to_previous_time_window(self, _: discord.ui.Button, interaction: discord.Interaction):
@@ -109,6 +110,10 @@ class My(commands.Cog):
                                            WHERE r.discord_member_id = $1
                                            ''',
                                            ctx.author.id)
+            if len(tag_records) == 0:
+                await ctx.respond('Sorry, I have no data about you. Change that by registering with `/i-am`.')
+                return
+            nothing_to_show = True
             for record in tag_records:
                 tag = record[0]
                 name = record[1]
@@ -116,9 +121,14 @@ class My(commands.Cog):
                     data_records = await conn.fetch(SQL_DICT[which_data], tag, coc.utils.get_season_start())
                 else:
                     data_records = await conn.fetch(SQL_DICT[which_data], tag)
+                if len(data_records) > 1:
+                    nothing_to_show = False
                 times = [record[0] for record in data_records]
                 data = [record[1] for record in data_records]
                 plot.add_data(tag, name, times, data)
+            if nothing_to_show:
+                await ctx.respond('Sorry, I have no data to show you. Please do some attacks to change that.')
+                return
             image = plot.plot()
         view = ScrollView(plot)
         view.message = await ctx.respond(file=image, view=view)

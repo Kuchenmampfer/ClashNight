@@ -6,7 +6,6 @@ from discord import Option
 from discord.ext import commands
 
 from bot import Bot
-from cogs.utils import functions
 
 
 class Dropdown(discord.ui.Select):
@@ -26,7 +25,8 @@ class Dropdown(discord.ui.Select):
                 embed = discord.Embed(title=f'Accounts from {self.member.display_name}',
                                       colour=discord.Colour.blue(), )
                 embed.set_thumbnail(url=self.member.display_avatar.url)
-                await add_accounts_overview(embed, conn, self.member.id)
+                coc_account_records = await get_accounts_data(conn, self.member.id)
+                await add_accounts_overview(embed, coc_account_records)
             else:
                 data = await get_account_data(conn, self.values[0])
                 embed = get_account_embed(data, self.member.display_avatar.url)
@@ -104,8 +104,7 @@ async def get_account_data(conn: asyncpg.Connection, tag: str) -> dict:
     return data
 
 
-async def add_accounts_overview(embed: discord.Embed, conn: asyncpg.Connection, discord_id: int) -> None:
-    coc_account_records = await get_accounts_data(conn, discord_id)
+async def add_accounts_overview(embed: discord.Embed, coc_account_records: list[asyncpg.Record]) -> None:
     for record in coc_account_records:
         value = f'`{record[2]}`⛰️`{record[6] if record[6] else 0:6}`:medal:\n'
         if record[3] and record[4] and record[5]:
@@ -146,29 +145,28 @@ def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
     return embed
 
 
+async def create_embed(member: discord.Member, coc_account_records: list[asyncpg.Record]) -> discord.Embed:
+    embed = discord.Embed(title=f'{member.name} aka {member.display_name}',
+                          colour=discord.Colour.blue(), )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    await add_accounts_overview(embed, coc_account_records)
+    return embed
+
+
 class Profile(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    async def create_embed(self, member: discord.Member) -> discord.Embed:
-        embed = discord.Embed(title=f'{member.name} aka {member.display_name}',
-                              colour=discord.Colour.blue(), )
-        embed.set_thumbnail(url=member.display_avatar.url)
-        async with self.bot.pool.acquire() as conn:
-            await add_accounts_overview(embed, conn, member.id)
-        return embed
 
     @commands.user_command(name="builder-base-profile",
                            description='View details on all coc accounts linked to a discord user')
     async def user_profile(self, ctx: discord.ApplicationContext, member: discord.Member):
         await ctx.defer()
-        try:
-            embed = await self.create_embed(member)
-        except TypeError:
-            await ctx.respond("Sorry, I have no data about this user.")
-            return
         async with self.bot.pool.acquire() as conn:
             coc_account_records = await get_accounts_data(conn, member.id)
+        if len(coc_account_records) == 0:
+            await ctx.respond('Sorry, I have no data about this user. He can change that by registering with `/i-am`.')
+            return
+        embed = await create_embed(member, coc_account_records)
         accounts = {}
         for record in coc_account_records:
             accounts[record["coc_tag"]] = record["coc_name"]

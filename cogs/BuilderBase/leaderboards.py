@@ -105,6 +105,9 @@ class Leaderboards(commands.Cog):
                 ''',
                 ctx.guild_id
             )
+            if len(records) == 0:
+                await ctx.respond('No one in this server has linked any account. To use this command, please register '
+                                  'using the `/i-am´ command.')
 
             leaderboard_list = []
             for record in records:

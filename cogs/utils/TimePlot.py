@@ -49,7 +49,8 @@ class TimePlot:
         self.current_end_time = min(self.current_end_time + self.offset, datetime.now(self.timezone))
 
     def previous(self):
-        self.current_end_time = self.current_end_time - self.offset
+        self.current_end_time = max(self.current_end_time - self.offset,
+                                    min([data[0][0] for data in self.data.values()]) + self.offset)
 
     def now(self):
         self.current_end_time = datetime.now(self.timezone)
