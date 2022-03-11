@@ -18,7 +18,8 @@ class Bot(commands.Bot):
         super().__init__(command_prefix=',',
                          case_insensitive=True,
                          intents=settings.intents,
-                         help_command=None)
+                         help_command=None,
+                         activity=discord.Game('/info for information'))
         self.coc = settings.coc_client
         self.emotes = settings.emotes
         self.war_report_channel_id = settings.war_report_channel_id
@@ -38,6 +39,28 @@ class Bot(commands.Bot):
 
     async def get_pool(self):
         self.pool = await asyncpg.create_pool(self.postgres_dsn_str)
+        for guild in self.guilds:
+            async with self.pool.acquire() as conn:
+                await conn.execute('''
+                                   INSERT INTO DiscordGuilds(guild_id, guild_name)
+                                   VALUES($1, $2)
+                                   ON CONFLICT DO NOTHING
+                                   ''',
+                                   guild.id, guild.name)
+                async for member in guild.fetch_members():
+                    if not member.bot:
+                        await conn.execute('''
+                                           INSERT INTO DiscordMembers(member_id, member_name)
+                                           VALUES($1, $2)
+                                           ON CONFLICT DO NOTHING
+                                           ''',
+                                           member.id, member.name)
+                        await conn.execute('''
+                                           INSERT INTO GuildMemberReferences(guild_id, member_id)
+                                           VALUES($1, $2)
+                                           ON CONFLICT DO NOTHING
+                                           ''',
+                                           guild.id, member.id)
 
     async def on_ready(self):
         self.logger.warning(f"Bot is logged in as {self.user} ID: {self.user.id}")

@@ -15,6 +15,7 @@ class General(commands.Cog):
                       'databases instead. The bot grew, and in march 2022, it was finally ready to be released to ' \
                       'the public. Now everyone can see live in game leaderboards, ' \
                       'track their trophy pushing progress and more...\n\n' \
+                      'To view my commands, use `/commands`. ' \
                       'If you like me, feel free to [invite me](https://discord.com/api/oauth2/authorize?client_id=8544730' \
                       '40669966397&permissions=378880&scope=bot%20applications.commands) to all your servers. If you need help, ' \
                       'have found a bug, want to request a feature or stay up to date with the my development, join my ' \
@@ -24,7 +25,8 @@ class General(commands.Cog):
                               description=description)
         async with self.bot.pool.acquire() as conn:
             guilds = await conn.fetchrow('SELECT COUNT(*) FROM DiscordGuilds')
-            members = await conn.fetchrow('SELECT COUNT(*) FROM DiscordMembers')
+            members = await conn.fetchrow('SELECT COUNT(*) FROM DiscordMembers '
+                                          'WHERE member_id IN (SELECT r.member_id FROM GuildMemberReferences r)')
             accounts = await conn.fetchrow('SELECT COUNT(*) FROM RegisteredBuilderBasePlayers '
                                            'WHERE discord_member_id IS NOT NULL')
             embed.add_field(name='Servers', value=guilds[0])
