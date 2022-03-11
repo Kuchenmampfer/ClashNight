@@ -10,7 +10,7 @@ class Events(commands.Cog):
     async def on_guild_join(self, guild):
         guild_log_channel = await self.bot.fetch_channel(951240760399921212)
         embed = discord.Embed(colour=discord.Colour.blue(),
-                              description=f'Joined server `{guild.name:32}` with `{guild.member_count:6} members.')
+                              description=f'Joined server `{guild.name:32}` with `{guild.member_count:6}` members.')
         await guild_log_channel.send(embed=embed)
         async with self.bot.pool.acquire() as conn:
             await conn.execute('''
