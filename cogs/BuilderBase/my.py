@@ -63,24 +63,24 @@ class ScrollView(discord.ui.View):
         self.add_item(self.stop_button)
 
     async def got_to_previous_time_window(self, interaction: discord.Interaction):
-        await interaction.response.defer()
         if interaction.user == self.user:
+            await interaction.response.defer()
             self.plot.previous()
             await self.update_message(interaction)
         else:
             await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
 
     async def got_to_next_time_window(self, interaction: discord.Interaction):
-        await interaction.response.defer()
         if interaction.user == self.user:
+            await interaction.response.defer()
             self.plot.next()
             await self.update_message(interaction)
         else:
             await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
 
     async def got_to_current_time_window(self, interaction: discord.Interaction):
-        await interaction.response.defer()
         if interaction.user == self.user:
+            await interaction.response.defer()
             self.plot.now()
             await self.update_message(interaction)
         else:
@@ -88,13 +88,14 @@ class ScrollView(discord.ui.View):
 
     async def satisfied(self, interaction: discord.Interaction):
         if interaction.user == self.user:
+            await interaction.response.defer()
             self.stop()
         else:
             await interaction.response.send_message('Sorry, only the command user can use these buttons', ephemeral=True)
 
     async def account_chosen(self, interaction: discord.Interaction):
-        await interaction.response.defer()
         if interaction.user == self.user:
+            await interaction.response.defer()
             self.plot.choose_account(self.account_selector.values[0])
             await self.update_message(interaction)
         else:
