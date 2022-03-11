@@ -39,31 +39,32 @@ class Bot(commands.Bot):
 
     async def get_pool(self):
         self.pool = await asyncpg.create_pool(self.postgres_dsn_str)
-        for guild in self.guilds:
-            async with self.pool.acquire() as conn:
+
+    async def on_ready(self):
+        self.logger.warning(f"Bot is logged in as {self.user} ID: {self.user.id}")
+        async with self.pool.acquire() as conn:
+            for guild in self.guilds:
                 await conn.execute('''
-                                   INSERT INTO DiscordGuilds(guild_id, guild_name)
-                                   VALUES($1, $2)
-                                   ON CONFLICT DO NOTHING
-                                   ''',
+                                           INSERT INTO DiscordGuilds(guild_id, guild_name)
+                                           VALUES($1, $2)
+                                           ON CONFLICT DO NOTHING
+                                           ''',
                                    guild.id, guild.name)
                 async for member in guild.fetch_members():
                     if not member.bot:
                         await conn.execute('''
-                                           INSERT INTO DiscordMembers(member_id, member_name)
-                                           VALUES($1, $2)
-                                           ON CONFLICT DO NOTHING
-                                           ''',
+                                                   INSERT INTO DiscordMembers(member_id, member_name)
+                                                   VALUES($1, $2)
+                                                   ON CONFLICT DO NOTHING
+                                                   ''',
                                            member.id, member.name)
                         await conn.execute('''
-                                           INSERT INTO GuildMemberReferences(guild_id, member_id)
-                                           VALUES($1, $2)
-                                           ON CONFLICT DO NOTHING
-                                           ''',
+                                                   INSERT INTO GuildMemberReferences(guild_id, member_id)
+                                                   VALUES($1, $2)
+                                                   ON CONFLICT DO NOTHING
+                                                   ''',
                                            guild.id, member.id)
-
-    async def on_ready(self):
-        self.logger.warning(f"Bot is logged in as {self.user} ID: {self.user.id}")
+        self.logger.warning('Guilds and members updated')
 
     async def on_resume(self):
         self.logger.warning('Resuming connection...')
