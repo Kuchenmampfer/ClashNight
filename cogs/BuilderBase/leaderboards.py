@@ -50,8 +50,8 @@ class Leaderboards(commands.Cog):
         if mode == 'Players':
             leaderboard_list: list[coc.RankedPlayer] = \
                 await self.bot.coc.get_location_players_versus(LOCATION_DICT[location]) \
-                    if LOCATION_DICT[location] \
-                    else await self.bot.coc.get_location_players_versus()
+                if LOCATION_DICT[location] \
+                else await self.bot.coc.get_location_players_versus()
             leaderboard = Leaderboard(leaderboard_list,
                                       f'Leaderboard in {location}',
                                       '{0}{1}`{2.versus_trophies}`🏆 {2.name}\n',
@@ -60,8 +60,8 @@ class Leaderboards(commands.Cog):
         else:
             leaderboard_list: list[coc.RankedClan] = \
                 await self.bot.coc.get_location_clans_versus(LOCATION_DICT[location]) \
-                    if LOCATION_DICT[location] \
-                    else await self.bot.coc.get_location_clans_versus()
+                if LOCATION_DICT[location] \
+                else await self.bot.coc.get_location_clans_versus()
             leaderboard = Leaderboard(leaderboard_list,
                                       f'Clan leaderboard in {location}',
                                       '{0}{1}`{2.versus_points}`🏆 {2.name}\n',
