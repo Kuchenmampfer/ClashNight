@@ -16,8 +16,9 @@ class General(commands.Cog):
                       'the public. Now everyone can see live in game leaderboards, ' \
                       'track their trophy pushing progress and more...\n\n' \
                       'To view my commands, use `/commands`. ' \
-                      'If you like me, feel free to [invite me](https://discord.com/api/oauth2/authorize?client_id=8544730' \
-                      '40669966397&permissions=378880&scope=bot%20applications.commands) to all your servers. If you need help, ' \
+                      'If you like me, feel free to [invite me](https://discord.com/api/oauth2/authorize?client_id=' \
+                      '854473040669966397&permissions=313344&scope=bot%20applications.commands) ' \
+                      'to all your servers. If you need help, ' \
                       'have found a bug, want to request a feature or stay up to date with the my development, join my ' \
                       '[support server](https://discord.gg/qtphfZ9XFH). ' \
                       'If you want to check out my source code, do so on [github](https://github.com/Kuchenmampfer/ClashNight).'
@@ -36,9 +37,9 @@ class General(commands.Cog):
             if support_server is not None:
                 embed.set_thumbnail(url=support_server.icon.url)
             invite_button = discord.ui.Button(style=discord.ButtonStyle.link,
-                                              label='invite me', url='https://discord.com/api/oauth2/authorize?'
-                                                                     'client_id=854473040669966397&permissions=378880&'
-                                                                     'scope=bot%20applications.commands')
+                                              label='invite me',
+                                              url='https://discord.com/api/oauth2/authorize?client_id='
+                                                  '854473040669966397&permissions=313344&scope=bot%20applications.commands')
             support_button = discord.ui.Button(style=discord.ButtonStyle.link,
                                                label='support server', url='https://discord.gg/qtphfZ9XFH')
             github_button = discord.ui.Button(style=discord.ButtonStyle.link,

@@ -30,10 +30,6 @@ class InitializeDatabase(commands.Cog):
                         (
                         member_id BIGINT PRIMARY KEY,
                         member_name VARCHAR(32) NOT NULL,
-                        base_count SMALLINT DEFAULT 0,
-                        vier_gewinnt_score SMALLINT DEFAULT 0,
-                        vier_gewinnt_elo SMALLINT DEFAULT 100,
-                        music_quiz_score SMALLINT DEFAULT 0
                         );
                         
                         CREATE TABLE IF NOT EXISTS GuildMemberReferences
@@ -47,19 +43,6 @@ class InitializeDatabase(commands.Cog):
                         CONSTRAINT fk_member
                             FOREIGN KEY(member_id)
                                 REFERENCES DiscordMembers(member_id)
-                                ON DELETE CASCADE
-                        );
-                        
-                        CREATE TABLE IF NOT EXISTS GuildTextCommands
-                        (
-                        command_name VARCHAR(32) NOT NULL,
-                        command_return_text TEXT NOT NULL,
-                        guild_id BIGINT NOT NULL,
-                        is_public BOOLEAN DEFAULT FALSE,
-                        PRIMARY KEY(command_name, guild_id),
-                        CONSTRAINT fk_guild
-                            FOREIGN KEY(guild_id)
-                                REFERENCES DiscordGuilds(guild_id)
                                 ON DELETE CASCADE
                         );
                         
@@ -153,51 +136,6 @@ class InitializeDatabase(commands.Cog):
                         (
                         time TIMESTAMP WITH TIME ZONE PRIMARY KEY,
                         duels SMALLINT NOT NULL
-                        );
-                        
-                        CREATE TABLE IF NOT EXISTS DuelGamesResults
-                        (
-                        time TIMESTAMP WITH TIME ZONE NOT NULL,
-                        game VARCHAR(16) NOT NULL,
-                        winner_id BIGINT,
-                        loser_id BIGINT,
-                        was_draw BOOLEAN DEFAULT FALSE,
-                        CONSTRAINT fk_winner
-                            FOREIGN KEY(winner_id)
-                                REFERENCES DiscordMembers(member_id)
-                                ON DELETE SET NULL,
-                        CONSTRAINT fk_loser
-                            FOREIGN KEY(loser_id)
-                                REFERENCES DiscordMembers(member_id)
-                                ON DELETE SET NULL
-                        );
-                        
-                        CREATE TABLE IF NOT EXISTS MusicQuizzes
-                        (
-                        lb_message_id BIGINT PRIMARY KEY,
-                        guild_id BIGINT NOT NULL,
-                        quiz_date DATE,
-                        CONSTRAINT fk_guild
-                            FOREIGN KEY(guild_id)
-                                REFERENCES DiscordGuilds(guild_id)
-                                ON DELETE CASCADE
-                        );
-                           
-                        CREATE TABLE IF NOT EXISTS MusicQuizScores
-                        (
-                        lb_message_id BIGINT NOT NULL,
-                        participator_id BIGINT NOT NULL,
-                        points SMALLINT NOT NULL,
-                        place SMALLINT NOT NULL,
-                        PRIMARY KEY(lb_message_id, participator_id),
-                        CONSTRAINT fk_member
-                            FOREIGN KEY(participator_id)
-                                REFERENCES DiscordMembers(member_id)
-                                ON DELETE CASCADE,
-                        CONSTRAINT fk_quiz
-                            FOREIGN KEY(lb_message_id)
-                                REFERENCES MusicQuizzes(lb_message_id)
-                                ON DELETE CASCADE
                         );
                         ''')
             #  IF NOT EXISTS is not possible when creating views,
