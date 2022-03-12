@@ -33,22 +33,6 @@ class Dropdown(discord.ui.Select):
             await interaction.edit_original_message(embed=embed, view=self.view)
 
 
-async def get_fun_data(conn: asyncpg.Connection, discord_id: int) -> list[asyncpg.Record]:
-    vier_gewinnt_record = await conn.fetchrow('''
-                                              SELECT vier_gewinnt_elo
-                                              FROM DiscordMembers
-                                              WHERE member_id = $1 
-                                              ''',
-                                              discord_id)
-    music_quiz_record = await conn.fetchrow('''
-                                            SELECT COUNT(points), SUM(points), AVG(points), MAX(points)
-                                            FROM MusicQuizScores
-                                            WHERE participator_id = $1
-                                            ''',
-                                            discord_id)
-    return [vier_gewinnt_record, music_quiz_record]
-
-
 async def get_accounts_data(conn: asyncpg.Connection, discord_id: int) -> list[asyncpg.Record]:
     coc_account_records = await conn.fetch('''
                                            SELECT * FROM FullCocPlayers
