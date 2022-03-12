@@ -106,7 +106,7 @@ async def get_account_data(conn: asyncpg.Connection, tag: str) -> dict:
 
 async def add_accounts_overview(embed: discord.Embed, coc_account_records: list[asyncpg.Record]) -> None:
     for record in coc_account_records:
-        value = f'`{record[2]}`⛰️`\n'
+        value = f'`{record[2]}`⛰️\n'
         if record[3] and record[4] and record[5]:
             value += f'`{record[5]}`:trophy:`{record[4]:6}`:ladder:`{record[3]}`:calendar_spiral:\n'
         value += f'`{record[7]}`:trophy:`{record[8]:6}`:dart:`{record[9]:7}`:hut:\n'
