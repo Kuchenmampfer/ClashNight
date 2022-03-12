@@ -81,7 +81,6 @@ class Leaderboards(commands.Cog):
                                                       OptionChoice('Best finish season', 1),
                                                       OptionChoice('Best finish rank', 2),
                                                       OptionChoice('Best finish trophies', 3),
-                                                      OptionChoice('Prestige', 4),
                                                       OptionChoice('Number of wins', 6),
                                                       OptionChoice('Number of builder halls destroyed', 7)
                                                   ],
