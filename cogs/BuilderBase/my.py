@@ -119,7 +119,8 @@ class My(commands.Cog):
                                         OptionChoice('Winrate'),
                                         OptionChoice('Trophy Change')
                                     ]),
-                 time_interval: Option(float, name='time-interval', description='How many days of data do you want to see at once?',
+                 time_interval: Option(float, name='time-interval', description='How many days of data do you want to '
+                                                                                'see at once? Default: 7.0',
                                        min_value=0.04, max_value=365, default=7.0)
                  ):
         await ctx.defer()
@@ -140,10 +141,7 @@ class My(commands.Cog):
             for record in tag_records:
                 tag = record[0]
                 name = record[1]
-                if which_data == 'season-wins':
-                    data_records = await conn.fetch(SQL_DICT[which_data], tag, coc.utils.get_season_start())
-                else:
-                    data_records = await conn.fetch(SQL_DICT[which_data], tag)
+                data_records = await conn.fetch(SQL_DICT[which_data], tag)
                 if len(data_records) > 1:
                     nothing_to_show = False
                 times = [record[0] for record in data_records]
