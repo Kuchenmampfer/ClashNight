@@ -8,15 +8,14 @@ import settings
 def place_emote(place: int):
     if place == 1:
         return ':first_place:'
-    elif place == 2:
+    if place == 2:
         return ':second_place:'
-    elif place == 3:
+    if place == 3:
         return ':third_place:'
-    else:
-        try:
-            return settings.emotes[place]
-        except KeyError:
-            return f'`{place}`: '
+    try:
+        return settings.emotes[place]
+    except KeyError:
+        return f'`{place}`: '
 
 
 def get_direction_arrow(rank, previous_rank, reverse=False):

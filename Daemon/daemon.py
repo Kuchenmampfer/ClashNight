@@ -56,4 +56,3 @@ class Daemon:
 
     async def events(self):
         await events(self)
-

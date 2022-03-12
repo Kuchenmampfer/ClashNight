@@ -30,4 +30,3 @@ class Leaderboard(pages.Paginator):
 
         super().__init__(self.embeds, use_default_buttons=False, custom_buttons=self.buttons, show_indicator=False,
                          timeout=60)
-

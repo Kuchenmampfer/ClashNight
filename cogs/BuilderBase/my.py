@@ -64,9 +64,8 @@ class ScrollView(discord.ui.View):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id == self.user_id:
             return True
-        else:
-            await interaction.response.send_message("Sorry, only the command user can use these buttons", ephemeral=True)
-            return False
+        await interaction.response.send_message("Sorry, only the command user can use these buttons", ephemeral=True)
+        return False
 
     async def got_to_previous_time_window(self, interaction: discord.Interaction):
         await interaction.response.defer()
