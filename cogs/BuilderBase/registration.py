@@ -106,6 +106,14 @@ class Registration(commands.Cog):
 
                 if has_seasons:
                     await conn.execute('''
+                                       UPDATE TopBuilderBasePlayers
+                                       SET best_season_id = $2, best_season_rank = $3, best_season_trophies = $4
+                                       WHERE coc_tag = $1
+                                       ''',
+                                       player.tag,
+                                       best_season.id, best_season.rank, best_season.trophies
+                                       )
+                    await conn.execute('''
                                        INSERT INTO BuilderBaseFinishes
                                        (coc_tag, finish_season_id, finish_rank, finish_trophies)
                                        VALUES($1, $2, $3, $4)
