@@ -102,7 +102,10 @@ async def add_accounts_overview(embed: discord.Embed, coc_account_records: list[
 
 
 def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
-    embed = discord.Embed(title=data["coc_name"], description=data["coc_tag"], colour=discord.Colour.blue())
+    embed = discord.Embed(title=data["coc_name"],
+                          description=f'[{data["coc_tag"]}](https://link.clashofclans.com/en?action=OpenPlayerProfile&'
+                                      f'tag=%23{data["coc_tag"][1:]})',
+                          colour=discord.Colour.blue())
     if member_avatar_url:
         embed.set_thumbnail(url=member_avatar_url)
     value = f'`{data["trophies"]:7}`:trophy: `{data["wins"]:6}`:dart: `{data["builder_halls"]:5}`:hut:'
@@ -164,7 +167,7 @@ class Profile(commands.Cog):
                             member: Option(discord.Member, "From who do you want to see the profile?")):
         await self.user_profile(self, ctx, member)
 
-    @commands.slash_command(name='player', description='View details about a clash of clans player',)
+    @commands.slash_command(name='player', description='View details about a clash of clans player', )
     async def player_info(self, ctx: discord.ApplicationContext,
                           player_tag: Option(str, 'The in game tag of the player I shall show')):
         await ctx.defer()
