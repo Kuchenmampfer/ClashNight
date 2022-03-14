@@ -33,10 +33,18 @@ Y_LABEL_DICT = {
 
 class ScrollView(discord.ui.View):
     def __init__(self, plot: TimePlot, user_id: int):
-        super().__init__()
         self.plot = plot
         self.user_id = user_id
         self.message = None
+        self.previous_button = discord.ui.Button(label='◀️', style=discord.ButtonStyle.green, row=1)
+        self.previous_button.callback = self.got_to_previous_time_window
+        self.next_button = discord.ui.Button(label='▶️', style=discord.ButtonStyle.green, row=1, disabled=True)
+        self.next_button.callback = self.got_to_next_time_window
+        self.now_button = discord.ui.Button(label='⏯️', style=discord.ButtonStyle.green, row=1, disabled=True)
+        self.now_button.callback = self.got_to_current_time_window
+        self.stop_button = discord.ui.Button(label='⏹️', style=discord.ButtonStyle.green, row=1)
+        self.stop_button.callback = self.satisfied
+        super().__init__(self.previous_button, self.next_button, self.now_button, self.stop_button)
         if len(self.plot.data) > 1:
             select_options = []
             names = []
@@ -48,18 +56,6 @@ class ScrollView(discord.ui.View):
             self.account_selector = discord.ui.Select(options=select_options, row=0)
             self.account_selector.callback = self.account_chosen
             self.add_item(self.account_selector)
-        self.previous_button = discord.ui.Button(label='◀️', style=discord.ButtonStyle.green, row=1)
-        self.previous_button.callback = self.got_to_previous_time_window
-        self.add_item(self.previous_button)
-        self.next_button = discord.ui.Button(label='▶️', style=discord.ButtonStyle.green, row=1, disabled=True)
-        self.next_button.callback = self.got_to_next_time_window
-        self.add_item(self.next_button)
-        self.now_button = discord.ui.Button(label='⏯️', style=discord.ButtonStyle.green, row=1, disabled=True)
-        self.now_button.callback = self.got_to_current_time_window
-        self.add_item(self.now_button)
-        self.stop_button = discord.ui.Button(label='⏹️', style=discord.ButtonStyle.green, row=1)
-        self.stop_button.callback = self.satisfied
-        self.add_item(self.stop_button)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id == self.user_id:

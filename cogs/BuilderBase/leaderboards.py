@@ -1,4 +1,4 @@
-from typing import Dict, Union, Any, Optional
+from typing import Optional
 
 import coc
 import discord
@@ -52,7 +52,7 @@ class Leaderboards(commands.Cog):
                 await self.bot.coc.get_location_players_versus(LOCATION_DICT[location]) \
                 if LOCATION_DICT[location] \
                 else await self.bot.coc.get_location_players_versus()
-            leaderboard = Leaderboard(leaderboard_list,
+            leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
                                       f'Leaderboard in {location}',
                                       '{0}{1}`{2.versus_trophies}`🏆 {2.name}\n',
                                       True
@@ -62,12 +62,18 @@ class Leaderboards(commands.Cog):
                 await self.bot.coc.get_location_clans_versus(LOCATION_DICT[location]) \
                 if LOCATION_DICT[location] \
                 else await self.bot.coc.get_location_clans_versus()
-            leaderboard = Leaderboard(leaderboard_list,
+            leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
                                       f'Clan leaderboard in {location}',
                                       '{0}{1}`{2.versus_points}`🏆 {2.name}\n',
                                       True
                                       )
-        await leaderboard.respond(ctx.interaction)
+        await leaderboard.disable_buttons()
+        if len(leaderboard.embeds) > 1:
+            message = await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index], view=leaderboard)
+            await leaderboard.wait()
+            await message.edit(view=None)
+        else:
+            await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index])
 
     @commands.slash_command(name='server-leaderboard',
                             description='Get a leaderboard with all the players in this discord server')
@@ -140,12 +146,18 @@ class Leaderboards(commands.Cog):
             'Number of builder halls destroyed',
         ]
 
-        leaderboard = Leaderboard(leaderboard_list,
+        leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
                                   f'{header_categories[category]} leaderboard in {ctx.guild.name}',
                                   format_strings[category],
                                   False
                                   )
-        await leaderboard.respond(ctx.interaction)
+        await leaderboard.disable_buttons()
+        if len(leaderboard.embeds) > 1:
+            message = await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index], view=leaderboard)
+            await leaderboard.wait()
+            await message.edit(view=None)
+        else:
+            await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index])
 
 
 def setup(bot):
