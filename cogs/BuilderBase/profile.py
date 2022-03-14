@@ -133,8 +133,7 @@ def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
 
 
 async def create_embed(member: discord.Member, coc_account_records: list[asyncpg.Record]) -> discord.Embed:
-    embed = discord.Embed(title=f'{member.name} aka {member.display_name}',
-                          colour=discord.Colour.blue(), )
+    embed = discord.Embed(title=f'{member.name} aka {member.display_name}', colour=discord.Colour.blue())
     embed.set_thumbnail(url=member.display_avatar.url)
     await add_accounts_overview(embed, coc_account_records)
     return embed
