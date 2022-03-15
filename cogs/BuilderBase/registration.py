@@ -85,6 +85,12 @@ async def newly_register_account(conn: asyncpg.Connection, member_id: int, playe
                        )
 
 
+async def has_reached_account_limit(conn: asyncpg.Connection, member_id: int) -> bool:
+    record = await conn.fetchrow('SELECT COUNT(*) FROM RegisteredBuilderBasePlayers WHERE discord_member_id = $1',
+                                 member_id)
+    return record[0] > 19
+
+
 class Registration(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -99,6 +105,10 @@ class Registration(commands.Cog):
             return
 
         async with self.bot.pool.acquire() as conn:
+            if await has_reached_account_limit(conn, ctx.author.id):
+                limit_response = 'Sorry, you can only link up to 20 accounts'
+                await respond_or_send(ctx, is_slash_command, limit_response)
+                return
             record = await conn.fetchrow('SELECT * FROM RegisteredBuilderBasePlayers WHERE coc_tag = $1', player.tag)
             if record:
                 if record['discord_member_id'] == ctx.author.id:
