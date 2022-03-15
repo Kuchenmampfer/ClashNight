@@ -21,6 +21,8 @@ def get_seasons(player: coc.Player) -> [bool, Season, Season]:
         has_seasons = True
         best_season = player.legend_statistics.best_versus_season
         previous_season = player.legend_statistics.previous_versus_season
+        if best_season is None or previous_season is None:
+            raise AttributeError
     except AttributeError:
         has_seasons = False
         best_season = Season(data={'rank': None, 'trophies': None, 'id': None})
