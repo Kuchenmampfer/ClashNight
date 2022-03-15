@@ -35,6 +35,34 @@ class Events(commands.Cog):
                                        guild.id, member.id)
 
     @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        guild_log_channel = await self.bot.fetch_channel(951240760399921212)
+        embed = discord.Embed(colour=discord.Colour.blue(),
+                              description=f'Left server `{guild.name:32}` with `{guild.member_count:6}` members.')
+        await guild_log_channel.send(embed=embed)
+        async with self.bot.pool.acquire() as conn:
+            await conn.execute('''
+                               DELETE FROM DiscordGuilds
+                               WHERE guild_id = $1
+                               ''',
+                               guild.id)
+
+    @commands.Cog.listener()
+    async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
+        if before.name != after.name:
+            guild_log_channel = await self.bot.fetch_channel(951240760399921212)
+            embed = discord.Embed(colour=discord.Colour.blue(),
+                                  description=f'`{before.name}` changed its name to `{after.name}`')
+            await guild_log_channel.send(embed=embed)
+            async with self.bot.pool.acquire() as conn:
+                await conn.execute('''
+                                   UPDATE DiscordGuilds
+                                   SET guild_name = $2
+                                   WHERE guild_id = $1
+                                   ''',
+                                   after.id, after.name)
+
+    @commands.Cog.listener()
     async def on_member_join(self, member):
         async with self.bot.pool.acquire() as conn:
             if not member.bot:

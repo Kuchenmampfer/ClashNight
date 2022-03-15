@@ -1,19 +1,18 @@
-import sys
+import asyncio
+import traceback
+from abc import ABC
+from time import sleep
 
 import asyncpg
 import coc
 import discord
-import traceback
-import asyncio
-
 from discord.ext import commands
-from time import sleep
 
 from log_stuff.logger_setup import setup_logger
 from settings import Settings
 
 
-class Bot(commands.Bot):
+class Bot(commands.Bot, ABC):
     def __init__(self, settings: Settings):
         super().__init__(command_prefix=',',
                          case_insensitive=True,
@@ -27,6 +26,7 @@ class Bot(commands.Bot):
         self.discord_logger = setup_logger('discord', 'log_stuff/discord.log', settings.webhook_url, settings.log_level)
         self.coc_logger = setup_logger('coc.http', 'log_stuff/coc.log', settings.webhook_url, settings.log_level)
         self.postgres_dsn_str = settings.dsn
+        self.pool = None
         asyncio.get_event_loop().run_until_complete(self.get_pool())
         sleep(4)
 
@@ -69,25 +69,16 @@ class Bot(commands.Bot):
     async def on_resume(self):
         self.logger.warning('Resuming connection...')
 
-    async def on_command(self, ctx):
-        await ctx.trigger_typing()
-        self.logger.debug(f'{ctx.author} hat {ctx.message.content} aufgerufen.')
-
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, coc.errors.Maintenance):
-            await ctx.send('Die API ist gerade in der Wartungspause, probier es später nochmal')
-        elif isinstance(error, commands.errors.CommandNotFound):
-            pass
-        else:
-            exc = f'Command "{ctx.message.content}" caused the following error:\n\n' + \
-                  ''.join(traceback.format_exception(type(error), error, error.__traceback__, chain=True))
-            self.logger.error(exc)
-
     async def on_application_command_error(
             self, ctx: discord.ApplicationContext, error: discord.DiscordException
     ) -> None:
         if isinstance(error, coc.errors.Maintenance):
-            await ctx.respond('Die API ist gerade in der Wartungspause, probier es später nochmal')
+            await ctx.respond('The clash of clans api currently is in maintenance. Please try again later.')
+        elif isinstance(error, asyncio.exceptions.TimeoutError):
+            await ctx.respond('It seems like the clash of clans api has some problems. Please try again later.')
         else:
-            exc = ''.join(traceback.format_exception(type(error), error, error.__traceback__, chain=True))
-            self.logger.error(exc)
+            await ctx.respond('Ooops, something went wrong. I informed my developer so he can fix it.')
+        exc = ctx.command.qualified_name
+        exc += ' caused the following error:\n'
+        exc += ''.join(traceback.format_exception(type(error), error, error.__traceback__, chain=True))
+        self.logger.error(exc)
