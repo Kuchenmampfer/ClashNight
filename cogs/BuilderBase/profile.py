@@ -185,10 +185,14 @@ class Profile(commands.Cog):
             'seasons': []
         }
         try:
+            if player.legend_statistics.previous_versus_season is None:
+                raise AttributeError
             data['seasons'].append(player.legend_statistics.previous_versus_season)
         except AttributeError:
             pass
         try:
+            if player.legend_statistics.previous_versus_season is None:
+                raise AttributeError
             data['seasons'].append(player.legend_statistics.best_versus_season)
         except AttributeError:
             pass
