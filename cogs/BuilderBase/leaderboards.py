@@ -16,6 +16,35 @@ with open('locations.csv', 'r', encoding='utf-8') as f:
         LOCATIONS.append(loc)
         LOCATION_DICT[loc] = int(loc_id)
 
+        FORMAT_STRINGS = [
+            '{0}`{1.best_versus_trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:3}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:6}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.legend_cups}`🏅 {1.coc_name}\n',
+            '{0}`{1.trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.wins}`🎯 {1.coc_name}\n',
+            '{0}`{1.builder_halls}`🛖 {1.coc_name}\n',
+        ]
+
+        HEADER_CATEGORIES = [
+            'All time best',
+            'Best finish season',
+            'Best finish rank',
+            'Best finish trophies',
+            'Prestige',
+            'Trophy',
+            'Number of wins',
+            'Number of builder halls destroyed',
+        ]
+
+        DATA_COLUMNS = [
+            'best_versus_trophies DESC',
+            'best_season_id, best_season_rank, best_season_trophies DESC',
+            'best_season_rank, best_season_trophies DESC',
+            'best_season_trophies DESC, best_season_rank'
+        ]
+
 
 def get_location(ctx: discord.AutocompleteContext):
     return [location for location in LOCATIONS if location.lower().startswith(ctx.value.lower())]
@@ -154,31 +183,54 @@ class Leaderboards(commands.Cog):
                 leaderboard_list.append(player)
             leaderboard_list.sort(key=lambda x: x.sort_by, reverse=category in [0, 3, 4, 5, 6, 7])
 
-        format_strings = [
-            '{0}`{1.best_versus_trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.legend_cups}`🏅 {1.coc_name}\n',
-            '{0}`{1.trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.wins}`🎯 {1.coc_name}\n',
-            '{0}`{1.builder_halls}`🛖 {1.coc_name}\n',
-        ]
+        leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
+                                  f'{HEADER_CATEGORIES[category]} leaderboard in {ctx.guild.name}',
+                                  FORMAT_STRINGS[category],
+                                  False
+                                  )
+        await leaderboard.disable_buttons()
+        if len(leaderboard.embeds) > 1:
+            message = await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index], view=leaderboard)
+            await leaderboard.wait()
+            await message.edit(view=None)
+        else:
+            await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index])
 
-        header_categories = [
-            'All time best',
-            'Best finish season',
-            'Best finish rank',
-            'Best finish trophies',
-            'Prestige',
-            'Trophy',
-            'Number of wins',
-            'Number of builder halls destroyed',
-        ]
+    @leaderboard.command(name='database',
+                         description='Get a leaderboard with all the players in my database')
+    async def database_lb(self,
+                          ctx: discord.ApplicationContext,
+                          category: Option(int,
+                                           'In wich category shall I rank the players? Default: All time best',
+                                           choices=[
+                                               OptionChoice('All time best', 0),
+                                               OptionChoice('Best finish season', 1),
+                                               OptionChoice('Best finish rank', 2),
+                                               OptionChoice('Best finish trophies', 3),
+                                           ],
+                                           default=0
+                                           ),
+                          ):
+        await ctx.defer()
+        leaderboard_list = []
+
+        async with self.bot.pool.acquire() as conn:
+            records = await conn.fetch(
+                f'''
+                SELECT * FROM TopBuilderBasePlayers
+                WHERE best_season_id IS NOT NULL
+                ORDER BY {DATA_COLUMNS[category]} 
+                LIMIT 500
+                '''
+            )
+        for record in records:
+            dict_player = dict(record)
+            player = Objectify(dict_player)
+            leaderboard_list.append(player)
 
         leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
-                                  f'{header_categories[category]} leaderboard in {ctx.guild.name}',
-                                  format_strings[category],
+                                  f'{HEADER_CATEGORIES[category]} leaderboard in my database',
+                                  FORMAT_STRINGS[category],
                                   False
                                   )
         await leaderboard.disable_buttons()
