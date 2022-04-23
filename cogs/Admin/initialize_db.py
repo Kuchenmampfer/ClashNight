@@ -29,7 +29,7 @@ class InitializeDatabase(commands.Cog):
                         CREATE TABLE IF NOT EXISTS DiscordMembers
                         (
                         member_id BIGINT PRIMARY KEY,
-                        member_name VARCHAR(32) NOT NULL,
+                        member_name VARCHAR(32) NOT NULL
                         );
                         
                         CREATE TABLE IF NOT EXISTS GuildMemberReferences

@@ -9,8 +9,8 @@ from cogs.utils.leaderboard import Leaderboard
 
 #  the following part reads the locations available at the coc api and makes them available for slash command use.
 with open('locations.csv', 'r', encoding='utf-8') as f:
-    LOCATIONS = ['Global']
-    LOCATION_DICT: dict[str, Optional[int]] = {'Global': None}
+    LOCATIONS = []
+    LOCATION_DICT: dict[str, Optional[int]] = {}
     for line in f.readlines():
         loc, loc_id = line.split(',')
         LOCATIONS.append(loc)
@@ -31,37 +31,33 @@ class Leaderboards(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(name='leaderboard', description='Get a live leaderboard from any location')
-    async def leaderboard(self,
-                          ctx: discord.ApplicationContext,
-                          location: Option(str,
-                                           'Choose the location you want the leaderboard of. Default: Global',
-                                           default='Global',
-                                           autocomplete=get_location
-                                           ),
-                          mode: Option(str,
-                                       'Do you want the player or clan leaderboard? Default: Players',
-                                       choices=['Players', 'Clans'],
-                                       default='Players'
-                                       )
+    leaderboard = discord.SlashCommandGroup('leaderboard', 'Get various leaderboards')
 
-                          ):
+    @leaderboard.command(name='local', description='Get a live leaderboard from any location')
+    async def local_lb(self,
+                       ctx: discord.ApplicationContext,
+                       location: Option(str,
+                                        'Choose the location you want the leaderboard of.',
+                                        autocomplete=get_location
+                                        ),
+                       mode: Option(str,
+                                    'Do you want the player or clan leaderboard? Default: Players',
+                                    choices=['Players', 'Clans'],
+                                    default='Players'
+                                    )
+                       ):
         await ctx.defer()
         if mode == 'Players':
             leaderboard_list: list[coc.RankedPlayer] = \
-                await self.bot.coc.get_location_players_versus(LOCATION_DICT[location]) \
-                if LOCATION_DICT[location] \
-                else await self.bot.coc.get_location_players_versus()
+                await self.bot.coc.get_location_players_versus(LOCATION_DICT[location])
             leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
-                                      f'Leaderboard in {location}',
+                                      f'Player leaderboard in {location}',
                                       '{0}{1}`{2.versus_trophies}`🏆 {2.name}\n',
                                       True
                                       )
         else:
             leaderboard_list: list[coc.RankedClan] = \
-                await self.bot.coc.get_location_clans_versus(LOCATION_DICT[location]) \
-                if LOCATION_DICT[location] \
-                else await self.bot.coc.get_location_clans_versus()
+                await self.bot.coc.get_location_clans_versus(LOCATION_DICT[location])
             leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
                                       f'Clan leaderboard in {location}',
                                       '{0}{1}`{2.versus_points}`🏆 {2.name}\n',
@@ -75,24 +71,58 @@ class Leaderboards(commands.Cog):
         else:
             await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index])
 
-    @commands.slash_command(name='server-leaderboard',
-                            description='Get a leaderboard with all the players in this discord server')
-    async def server_leaderboard(self,
-                                 ctx: discord.ApplicationContext,
-                                 category: Option(int,
-                                                  'In wich category shall I rank the server members? Default: Trophies',
-                                                  choices=[
-                                                      OptionChoice('Trophies', 5),
-                                                      OptionChoice('All time best', 0),
-                                                      OptionChoice('Best finish season', 1),
-                                                      OptionChoice('Best finish rank', 2),
-                                                      OptionChoice('Best finish trophies', 3),
-                                                      OptionChoice('Number of wins', 6),
-                                                      OptionChoice('Number of builder halls destroyed', 7)
-                                                  ],
-                                                  default=5
-                                                  ),
-                                 ):
+    @leaderboard.command(name='global', description='Get a global live leaderboard')
+    async def global_lb(self,
+                        ctx: discord.ApplicationContext,
+                        mode: Option(str,
+                                     'Do you want the player or clan leaderboard? Default: Players',
+                                     choices=['Players', 'Clans'],
+                                     default='Players'
+                                     )
+                        ):
+        await ctx.defer()
+        if mode == 'Players':
+            leaderboard_list: list[coc.RankedPlayer] = \
+                await self.bot.coc.get_location_players_versus()
+            leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
+                                      f'Global player leaderboard',
+                                      '{0}{1}`{2.versus_trophies}`🏆 {2.name}\n',
+                                      True
+                                      )
+        else:
+            leaderboard_list: list[coc.RankedClan] = \
+                await self.bot.coc.get_location_clans_versus()
+            leaderboard = Leaderboard(ctx.author.id, leaderboard_list,
+                                      f'Global clan leaderboard',
+                                      '{0}{1}`{2.versus_points}`🏆 {2.name}\n',
+                                      True
+                                      )
+        await leaderboard.disable_buttons()
+        if len(leaderboard.embeds) > 1:
+            message = await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index], view=leaderboard)
+            await leaderboard.wait()
+            await message.edit(view=None)
+        else:
+            await ctx.respond(embed=leaderboard.embeds[leaderboard.current_embed_index])
+
+    @leaderboard.command(name='server',
+                         description='Get a leaderboard with all the players in this discord server')
+    async def server_lb(self,
+                        ctx: discord.ApplicationContext,
+                        category: Option(int,
+                                         'In wich category shall I rank the server members? Default: Trophies',
+                                         choices=[
+                                             OptionChoice('Trophies', 5),
+                                             OptionChoice('All time best', 0),
+                                             OptionChoice('Best finish season', 1),
+                                             OptionChoice('Best finish rank', 2),
+                                             OptionChoice('Best finish trophies', 3),
+                                             OptionChoice('Number of wins', 6),
+                                             OptionChoice('Number of builder halls destroyed', 7)
+                                         ],
+                                         default=5
+                                         ),
+                        ):
         await ctx.defer()
         async with self.bot.pool.acquire() as conn:
             records = await conn.fetch(

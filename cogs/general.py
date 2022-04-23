@@ -51,9 +51,22 @@ class General(commands.Cog):
     async def show_commands(self, ctx: discord.ApplicationContext):
         await ctx.defer()
         embed = discord.Embed(colour=discord.Colour.blue(), title='My Commands')
-        for cmd in await self.bot.http.get_global_commands(self.bot.application_id):
+        global_cmd_list = await self.bot.http.get_global_commands(self.bot.application_id)
+        guild_cmd_list = await self.bot.http.get_guild_commands(self.bot.application_id, ctx.guild_id)
+        for cmd in sorted(global_cmd_list + guild_cmd_list, key=lambda x: x['name']):
             if cmd["description"] != '':
-                embed.add_field(name=cmd['name'], value=f'{cmd["description"]}', inline=False)
+                try:
+                    options = cmd['options']
+                except KeyError:
+                    embed.add_field(name=f"/{cmd['name']}", value=cmd['description'], inline=False)
+                    continue
+                if all([option['type'] > 2 for option in options]):
+                    embed.add_field(name=f"/{cmd['name']}", value=cmd['description'], inline=False)
+                else:
+                    for option in sorted(options, key=lambda x: x['name']):
+                        if option['type'] <= 2:
+                            embed.add_field(name=f"/{cmd['name']} {option['name']}", value=option['description'],
+                                            inline=False)
         await ctx.respond(embed=embed)
 
 
