@@ -90,13 +90,11 @@ async def get_account_data(conn: asyncpg.Connection, tag: str) -> dict:
 
 async def add_accounts_overview(embed: discord.Embed, coc_account_records: list[asyncpg.Record]) -> None:
     for record in coc_account_records:
-        value = f'`{record[2]}`⛰️\n'
-        if record[3] and record[4] and record[5]:
-            value += f'`{record[5]}`:trophy:`{record[4]:6}`:ladder:`{record[3]}`:calendar_spiral:\n'
-        value += f'`{record[7]}`:trophy:`{record[8]:6}`:dart:`{record[9]:7}`:hut:\n'
-        value += '------------------------------------'
+        value = f'[{record[0]}](https://link.clashofclans.com/en?action=OpenPlayerProfile&tag=%23{record[0]})\n' \
+                f'`{record[7]}`:trophy:`{record[2]}`⛰️`{record[8]:5}`:dart:`{record[9]:5}`:hut:\n' \
+                f'-------------------------------------------'
 
-        embed.add_field(name=f'{record[1]} ({record[0]})',
+        embed.add_field(name=record[1],
                         value=value,
                         inline=False)
 
@@ -133,9 +131,12 @@ def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
 
 
 async def create_embed(member: discord.Member, coc_account_records: list[asyncpg.Record]) -> discord.Embed:
-    embed = discord.Embed(title=f'{member.name} aka {member.display_name}', colour=discord.Colour.blue())
-    embed.set_thumbnail(url=member.display_avatar.url)
-    await add_accounts_overview(embed, coc_account_records)
+    if len(coc_account_records) == 1:
+        embed = get_account_embed(dict(coc_account_records[0]), member.display_avatar.url)
+    else:
+        embed = discord.Embed(title=f'Accounts from {member.display_name}', colour=discord.Colour.blue())
+        embed.set_thumbnail(url=member.display_avatar.url)
+        await add_accounts_overview(embed, coc_account_records)
     return embed
 
 
