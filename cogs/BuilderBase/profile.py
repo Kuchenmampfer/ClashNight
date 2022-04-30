@@ -131,12 +131,9 @@ def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
 
 
 async def create_embed(member: discord.Member, coc_account_records: list[asyncpg.Record]) -> discord.Embed:
-    if len(coc_account_records) == 1:
-        embed = get_account_embed(dict(coc_account_records[0]), member.display_avatar.url)
-    else:
-        embed = discord.Embed(title=f'Accounts from {member.display_name}', colour=discord.Colour.blue())
-        embed.set_thumbnail(url=member.display_avatar.url)
-        await add_accounts_overview(embed, coc_account_records)
+    embed = discord.Embed(title=f'Accounts from {member.display_name}', colour=discord.Colour.blue())
+    embed.set_thumbnail(url=member.display_avatar.url)
+    await add_accounts_overview(embed, coc_account_records)
     return embed
 
 
@@ -150,10 +147,15 @@ class Profile(commands.Cog):
         await ctx.defer()
         async with self.bot.pool.acquire() as conn:
             coc_account_records = await get_accounts_data(conn, member.id)
-        if len(coc_account_records) == 0:
-            await ctx.respond('Sorry, I have no data about this user. He can change that by registering with `/i-am`.')
-            return
-        embed = await create_embed(member, coc_account_records)
+            if len(coc_account_records) == 0:
+                await ctx.respond('Sorry, I have no data about this user. He can change that by registering with '
+                                  '`/i-am`.')
+                return
+            if len(coc_account_records) == 1:
+                data = await get_account_data(conn, coc_account_records[0][0])
+                embed = get_account_embed(data, member.display_avatar.url)
+            else:
+                embed = await create_embed(member, coc_account_records)
         accounts = {}
         for record in coc_account_records:
             accounts[record["coc_tag"]] = record["coc_name"]
