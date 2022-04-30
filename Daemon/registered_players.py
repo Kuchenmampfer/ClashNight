@@ -11,15 +11,13 @@ async def update_registered_builder_base_players(daemon, sleep_time: int, is_sea
         try:
             async with daemon.pool.acquire() as conn:
                 records = await conn.fetch('''
-                                           SELECT coc_tag FROM RegisteredBuilderBasePlayers
-                                           WHERE discord_member_id IS NOT NULL
+                                           SELECT coc_tag, discord_member_id FROM RegisteredBuilderBasePlayers
                                            ''')
-                db_player_tags = [record[0] for record in records]
                 try:
-                    for tag in db_player_tags:
-                        player: CustomPlayer = await daemon.coc_client.get_player(tag, cls=CustomPlayer,
-                                                                                  db_conn=conn, season_end=is_season_end)
-                        if await player.has_battled() or is_season_end:
+                    for [tag, d_member_id] in records:
+                        player: CustomPlayer = await daemon.coc_client.get_player(tag, cls=CustomPlayer, db_conn=conn,
+                                                                                  season_end=is_season_end)
+                        if (await player.has_battled() and d_member_id is not None) or is_season_end:
                             await player.save_to_bb_board()
                         if is_season_end:
                             await player.update_legend_cups()

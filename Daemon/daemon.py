@@ -15,7 +15,7 @@ class Daemon:
         self.coc_client = settings.coc_client
         self.postgres_dsn_str = settings.dsn
         self.logger = setup_logger('logger', 'log_stuff/daemon.log', settings.webhook_url, settings.log_level)
-        self.coc_logger = setup_logger('coc.http', 'log_stuff/demon_coc.log', settings.webhook_url, settings.log_level)
+        self.coc_logger = setup_logger('coc.http', 'log_stuff/daemon_coc.log', settings.webhook_url, settings.log_level)
 
     def exception_handler(self, _, context: dict):
         message = context['message']

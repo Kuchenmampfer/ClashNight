@@ -1,12 +1,4 @@
-/production_secrets.py
-/Daemon/daemon_coc.log
-/Daemon/coc_bot_daemon_season_end_may.log
-/Daemon/coc_bot_daemon.log
-/dev_secrets.py
-/fromRaspi/
-/log_stuff/coc.log
-/log_stuff/discord.log
-/log_stuff/my.log
+/*_secrets.py
+/log_stuff/*.log
 .idea
 /venv/
-/daemon_secrets.py
