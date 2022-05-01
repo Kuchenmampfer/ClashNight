@@ -24,7 +24,7 @@ SQL_DICT = {
 
 Y_LABEL_DICT = {
     'Trophies': 'Trophies',
-    'Wins': 'Total',
+    'Wins': 'Total wins',
     'Builder Halls': 'Total destroyed builder halls',
     'Winrate': 'Winrate over the last 10 duels respectively in %',
     'Trophy Change': 'Trophy change over the last 10 duels respectively in trophies'
@@ -146,6 +146,30 @@ class My(commands.Cog):
                 await ctx.respond('Sorry, I have no data to show you. Please do some attacks to change that.')
                 return
             image = plot.plot()
+        view = ScrollView(plot, ctx.user.id)
+        view.message = await ctx.respond(file=image, view=view)
+        await view.wait()
+        await view.message.edit(view=None)
+
+    @commands.slash_command(description='How active are the top 200 currently?')
+    async def activity(self, ctx: discord.ApplicationContext,
+                       time_interval: Option(float, name='time-interval',
+                                             description='How many days of data do you want to '
+                                                         'see at once? Default: 7.0',
+                                             min_value=0.04, max_value=365, default=7.0)
+                       ):
+        await ctx.defer()
+        plot = TimePlot('The activity in the top 200', time_interval, False,
+                        'The activity in duels between two top 200 players per hour')
+        async with self.bot.pool.acquire() as conn:
+            records = await conn.fetch('''
+                                       SELECT * FROM TopLadderActivity
+                                       ORDER BY time
+                                       ''')
+        times = [record[0] for record in records]
+        activities = [record[1] for record in records]
+        plot.add_data('Apfelkuchen', 'Activity', times, activities)
+        image = plot.plot()
         view = ScrollView(plot, ctx.user.id)
         view.message = await ctx.respond(file=image, view=view)
         await view.wait()
