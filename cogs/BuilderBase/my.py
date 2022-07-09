@@ -80,6 +80,7 @@ class ScrollView(discord.ui.View):
 
     async def satisfied(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        await interaction.edit_original_message(view=None)
         self.stop()
 
     async def account_chosen(self, interaction: discord.Interaction):
@@ -146,9 +147,9 @@ class My(commands.Cog):
                 return
             url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        interaction = await ctx.respond(url, view=view)
+        view.message = await ctx.respond(url, view=view)
         await view.wait()
-        await interaction.edit_original_message(view=None)
+        await view.message.edit(view=None)
 
     @commands.slash_command(description='How active are the top 200 currently?')
     async def activity(self, ctx: discord.ApplicationContext,
@@ -170,9 +171,9 @@ class My(commands.Cog):
         plot.add_data('Apfelkuchen', 'Activity', times, activities)
         url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        interaction = await ctx.respond(url, view=view)
+        view.message = await ctx.respond(url, view=view)
         await view.wait()
-        await interaction.edit_original_message(view=None)
+        await view.message.edit(view=None)
 
 
 def setup(bot):
