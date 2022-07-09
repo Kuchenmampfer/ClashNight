@@ -35,7 +35,6 @@ class ScrollView(discord.ui.View):
     def __init__(self, plot: TimePlot, user_id: int):
         self.plot = plot
         self.user_id = user_id
-        self.message = None
         self.previous_button = discord.ui.Button(label='◀️', style=discord.ButtonStyle.green, row=1)
         self.previous_button.callback = self.got_to_previous_time_window
         self.next_button = discord.ui.Button(label='▶️', style=discord.ButtonStyle.green, row=1, disabled=True)
@@ -80,7 +79,6 @@ class ScrollView(discord.ui.View):
 
     async def satisfied(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        await interaction.edit_original_message(view=None)
         self.stop()
 
     async def account_chosen(self, interaction: discord.Interaction):
@@ -92,7 +90,7 @@ class ScrollView(discord.ui.View):
         self.previous_button.disabled = self.plot.current_end_time - self.plot.offset < self.plot.first_time
         self.next_button.disabled = self.plot.current_end_time + self.plot.offset > datetime.now(self.plot.timezone)
         self.now_button.disabled = self.plot.current_end_time == datetime.now(self.plot.timezone)
-        self.message = await interaction.edit_original_message(content=self.plot.plot2url(), view=self)
+        await interaction.edit_original_message(content=self.plot.plot2url(), view=self)
 
     def on_timeout(self) -> None:
         plt.close(self.plot.fig)
@@ -147,9 +145,9 @@ class My(commands.Cog):
                 return
             url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        view.message = await ctx.respond(url, view=view)
+        message = await ctx.respond(url, view=view)
         await view.wait()
-        await view.message.edit(view=None)
+        await message.edit(view=None)
 
     @commands.slash_command(description='How active are the top 200 currently?')
     async def activity(self, ctx: discord.ApplicationContext,
@@ -171,9 +169,9 @@ class My(commands.Cog):
         plot.add_data('Apfelkuchen', 'Activity', times, activities)
         url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        view.message = await ctx.respond(url, view=view)
+        message = await ctx.respond(url, view=view)
         await view.wait()
-        await view.message.edit(view=None)
+        await message.edit(view=None)
 
 
 def setup(bot):
