@@ -1,3 +1,4 @@
+import os
 import random
 import string
 from datetime import timedelta, datetime
@@ -25,6 +26,7 @@ class TimePlot:
         self.timezone = timezone
         self.current_end_time = datetime.now(self.timezone)
         self.first_time = datetime.now(self.timezone)
+        self.previous_file = None
 
     def add_data(self, tag: str, name: str, times: list, data: list):
         if self.event_data:
@@ -82,4 +84,7 @@ class TimePlot:
         title = ''.join([random.choice(string.ascii_letters) for _ in range(12)])
         title += '.png'
         self.fig.savefig(f'graphics/{title}', format='png')
+        if os.path.exists(self.previous_file):
+            os.remove(self.previous_file)
+        self.previous_file = f'graphics{title}'
         return f'https://clashnight.kuchenmampfer.de/{title}'
