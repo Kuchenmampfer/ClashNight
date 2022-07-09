@@ -1,14 +1,13 @@
+import random
+import string
 from datetime import timedelta, datetime
 from typing import Union
 
-import discord
 import matplotlib
 import matplotlib.dates
 import matplotlib.pyplot as plt
 import numpy as np
 import pytz
-
-from cogs.utils.functions import plot2embed
 
 matplotlib.use('Agg')
 
@@ -61,7 +60,7 @@ class TimePlot:
         self.chosen_account = tag
         self.first_time = min(self.data[tag][1])
 
-    def plot(self) -> discord.File:
+    def plot2url(self) -> str:
         self.ax.clear()
         for tag, (name, times, data) in self.data.items():
             if self.chosen_account in ['all accounts', tag]:
@@ -80,5 +79,7 @@ class TimePlot:
         self.ax.legend()
         self.ax.axes.grid()
         self.ax.autoscale(True, 'x', True)
-        image: discord.file = plot2embed(self.ax)
-        return image
+        title = ''.join([random.choice(string.ascii_letters) for _ in range(12)])
+        title += '.png'
+        self.fig.savefig(f'graphics/{title}', format='png')
+        return f'https://clashnight.kuchenmampfer.de/{title}'

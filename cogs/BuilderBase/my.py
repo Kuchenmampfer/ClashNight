@@ -91,8 +91,7 @@ class ScrollView(discord.ui.View):
         self.previous_button.disabled = self.plot.current_end_time - self.plot.offset < self.plot.first_time
         self.next_button.disabled = self.plot.current_end_time + self.plot.offset > datetime.now(self.plot.timezone)
         self.now_button.disabled = self.plot.current_end_time == datetime.now(self.plot.timezone)
-        await interaction.delete_original_message()
-        self.message = await interaction.followup.send(file=self.plot.plot(), view=self)
+        self.message = await interaction.edit_original_message(content=self.plot.plot2url(), view=self)
 
     def on_timeout(self) -> None:
         plt.close(self.plot.fig)
@@ -145,9 +144,9 @@ class My(commands.Cog):
             if nothing_to_show:
                 await ctx.respond('Sorry, I have no data to show you. Please do some attacks to change that.')
                 return
-            image = plot.plot()
+            url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        view.message = await ctx.respond(file=image, view=view)
+        view.message = await ctx.respond(url, view=view)
         await view.wait()
         await view.message.edit(view=None)
 
@@ -169,9 +168,9 @@ class My(commands.Cog):
         times = [record[0] for record in records]
         activities = [record[1] for record in records]
         plot.add_data('Apfelkuchen', 'Activity', times, activities)
-        image = plot.plot()
+        url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        view.message = await ctx.respond(file=image, view=view)
+        view.message = await ctx.respond(url, view=view)
         await view.wait()
         await view.message.edit(view=None)
 
