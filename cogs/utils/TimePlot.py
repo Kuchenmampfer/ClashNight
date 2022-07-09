@@ -86,5 +86,5 @@ class TimePlot:
         self.fig.savefig(f'graphics/{title}', format='png')
         if self.previous_file is not None:
             os.remove(self.previous_file)
-        self.previous_file = f'graphics{title}'
+        self.previous_file = f'graphics/{title}'
         return f'https://clashnight.kuchenmampfer.de/{title}'
