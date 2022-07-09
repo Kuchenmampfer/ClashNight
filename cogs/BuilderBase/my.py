@@ -146,9 +146,9 @@ class My(commands.Cog):
                 return
             url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        view.message = await ctx.respond(url, view=view)
+        interaction = await ctx.respond(url, view=view)
         await view.wait()
-        await view.message.edit(view=None)
+        await interaction.edit_original_message(view=None)
 
     @commands.slash_command(description='How active are the top 200 currently?')
     async def activity(self, ctx: discord.ApplicationContext,
@@ -170,9 +170,9 @@ class My(commands.Cog):
         plot.add_data('Apfelkuchen', 'Activity', times, activities)
         url = plot.plot2url()
         view = ScrollView(plot, ctx.user.id)
-        view.message = await ctx.respond(url, view=view)
+        interaction = await ctx.respond(url, view=view)
         await view.wait()
-        await view.message.edit(view=None)
+        await interaction.edit_original_message(view=None)
 
 
 def setup(bot):
