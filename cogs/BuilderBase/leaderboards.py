@@ -19,8 +19,8 @@ with open('locations.csv', 'r', encoding='utf-8') as f:
         FORMAT_STRINGS = [
             '{0}`{1.best_versus_trophies}`🏆 {1.coc_name}\n',
             '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:3}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
-            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:6}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
+            '{0}`{1.best_season_id}`🗓️ `{1.best_season_rank:4}`🪜 `{1.best_season_trophies}`🏆 {1.coc_name}\n',
             '{0}`{1.legend_cups}`🏅 {1.coc_name}\n',
             '{0}`{1.trophies}`🏆 {1.coc_name}\n',
             '{0}`{1.wins}`🎯 {1.coc_name}\n',
