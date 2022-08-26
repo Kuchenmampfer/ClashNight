@@ -30,8 +30,8 @@ class General(commands.Cog):
                                           'WHERE member_id IN (SELECT r.member_id FROM GuildMemberReferences r)')
             accounts = await conn.fetchrow('SELECT COUNT(*) FROM RegisteredBuilderBasePlayers '
                                            'WHERE discord_member_id IS NOT NULL')
-            embed.add_field(name='Servers', value=guilds[0])
-            embed.add_field(name='Users', value=members[0])
+            embed.add_field(name='Servers', value=len(self.bot.guilds))
+            embed.add_field(name='Users', value=len(self.bot.users))
             embed.add_field(name='Accounts tracked', value=accounts[0])
             support_server = self.bot.get_guild(949752401978589314)
             if support_server is not None:
