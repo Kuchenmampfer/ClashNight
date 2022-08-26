@@ -7,6 +7,17 @@ from discord.ext import commands
 
 from bot import Bot
 
+EMOJI_DICT = {
+    'trophy': 'Amount of trophies - either the current one or the one of a finish',
+    'mountain': 'Personal trophy record - either of all time or in the current season',
+    'dart': 'Number of wins - either of all time or in the current season',
+    'hut': 'Total number of destroyed enemy builder halls',
+    'chart_with_upwards_trend': 'Winrate in the current season (can be inaccurate due to tracking limitations)',
+    'calendar_spiral': 'The season of a finish',
+    'ladder': 'The global rank of a finish',
+    'fire': 'The best finish'
+}
+
 
 class Dropdown(discord.ui.Select):
     def __init__(self, bot: Bot, member: discord.Member, accounts: dict):
@@ -16,17 +27,22 @@ class Dropdown(discord.ui.Select):
                                         description="Shows an overview over all your accounts")]
         for tag, name in accounts.items():
             options.append(discord.SelectOption(label=name, value=tag, description=tag))
+        options.append(discord.SelectOption(label="Info", value="info",
+                                            description="What is the meaning of all these emotes?"))
         super().__init__(options=options)
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         async with self.bot.pool.acquire() as conn:
             if self.values[0] == "all":
-                embed = discord.Embed(title=f'Accounts from {self.member.display_name}',
-                                      colour=discord.Colour.blue(), )
+                embed = discord.Embed(title=f'Accounts from {self.member.display_name}', colour=discord.Colour.blue())
                 embed.set_thumbnail(url=self.member.display_avatar.url)
                 coc_account_records = await get_accounts_data(conn, self.member.id)
                 await add_accounts_overview(embed, coc_account_records)
+            elif self.values[0] == "info":
+                embed = discord.Embed(title='Emoji legend', colour=discord.Colour.blue(),
+                                      description='\n'.join([f':{key}: {val}' for key, val in EMOJI_DICT.items()])
+                                      )
             else:
                 data = await get_account_data(conn, self.values[0])
                 embed = get_account_embed(data, self.member.display_avatar.url)
@@ -113,7 +129,7 @@ def get_account_embed(data: dict, member_avatar_url: str = '') -> discord.Embed:
     try:
         value = f'`{data["season_high"]:7}`:mountain: `{data["season_wins"]:6}`:dart: ' \
                 f'`{data["season_winrate"]:4}%`:chart_with_upwards_trend:'
-        embed.add_field(name='Current season: high, wins, winrate', value=value, inline=False)
+        embed.add_field(name='Current season', value=value, inline=False)
     except KeyError:
         pass
     except TypeError:
